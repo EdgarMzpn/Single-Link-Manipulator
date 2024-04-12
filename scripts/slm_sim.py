@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import rclpy
 import numpy as np
-from rclpy import Node
+from rclpy.node import Node
 from rclpy.time import Time
 from std_msgs.msg import Float32, Header
 from sensor_msgs.msg import JointState
