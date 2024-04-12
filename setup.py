@@ -9,7 +9,7 @@ setup(
     data_files=[
         ('share/' + package_name + '/launch', ['launch/pendulum_sim_launch.launch.py']),
         ('share/' + package_name + '/urdf', ['urdf/pendulum.urdf']),
-        # ('share/' + package_name + '/rviz', ['rviz/manipulator.rviz']),
+        ('share/' + package_name + '/rviz', ['rviz/manipulator.rviz']),
         ('share/' + package_name + '/models', ['models/Arm_2.stl']),
         ('share/' + package_name + '/models', ['models/Base_2.stl']),
         ('share/ament_index/resource_index/packages',
