@@ -1,54 +1,79 @@
 #!/usr/bin/env python
-import rospy
+import rclpy
 import numpy as np
-from std_msgs.msg import Float32
+from rclpy import Node
+from rclpy.time import Time
+from std_msgs.msg import Float32, Header
 from sensor_msgs.msg import JointState
 
-#Declare Variables to be used
+class SLM_Sim(Node):
+    def __init__(self):
+        super().__init__('SLM_Sim')
 
-# Setup Variables to be used
+        # Setup Variables to be used
+        self.k = 0.01
+        self.m = 0.75
+        self.l = 0.36
+        self.a = self.l/2
+        self.g = 9.8
+        self.J = 4/3 * (self.m * self.a**2)
+        self.Tau = 0.0
+        self.x1 = 0.0
+        self.x2 = 0.0
+        self.dt = 0.0
+        self.position = JointState()
+        self.header = Header()
 
-# Declare the input Message
+        # Define Subscribers
+        self.sub = self.create_subscription(Float32, 'tau', self.callbackTau, 10)
 
-# Declare the  process output message
+        # Define Publishers
+        self.arm_pub = self.create_publisher(JointState, 'joint_states', 10)
+        self.tau_pub = self.create_publisher(Float32, "tau", 10)
 
-
-#Define the callback functions
-
-
-  #wrap to pi function
-def wrap_to_Pi(theta):
-    result = np.fmod((theta + np.pi),(2 * np.pi))
-    if(result < 0):
-        result += 2 * np.pi
-    return result - np.pi
-
-
-if __name__=='__main__':
-    #Initialise and Setup node
-    rospy.init_node("SLM_Sim")
-
-    #Get Parameters   
-
-    # Configure the Node
-    loop_rate = rospy.Rate(rospy.get_param("~node_rate",100))
-
-
-    # Setup the Subscribers
-
-
-    #Setup de publishers
-
-    print("The SLM sim is Running")
-    try:
-        #Run the node (YOUR CODE HERE)
+        self.get_logger().info("The SLM_Sim code is running")
         
-            #WRITE YOUR CODE HERE
-            #WRITE YOUR CODE HERE
-            #WRITE YOUR CODE HERE
+    # Define the callback functions
+    def callbackTau(self, msg):
+        self.Tau = msg
 
-            #Wait and repeat
-            loop_rate.sleep()
+    # Wrap to pi function
+    def wrap_to_Pi(self, theta):
+        result = np.fmod((theta + np.pi),(2 * np.pi))
+        if(result < 0):
+            result += 2 * np.pi
+        return result - np.pi
     
-    except rospy.ROSInterruptException:
-        pass #Initialise and Setup node
+    # Run pendulum simulation
+    def run(self):
+        start_time = Time()
+        while(1):
+            dt = Time() - start_time
+            # SLM governing equation
+            self.x1 += self.x2*dt
+
+            x2_dot = (1/(self.J+self.m*self.a**2)) * (-self.m*self.g*self.a*np.cos(self.x1) - self.k*self.x2 + self.Tau)
+            self.x2 += x2_dot*dt
+            
+            print("x1 = ", self.x1)
+            print("tau = ", self.Tau)
+
+            self.position.header.stamp = Time()
+            self.position.name = ["joint2"]
+            self.position.position = [self.x1]
+            self.position.velocity = [self.x2]
+            self.arm_pub.publish(self.position)
+
+            if self.Tau > 0:
+                self.callbackTau(Float32(0))
+
+# Initialize the Node
+def main(args=None):
+    rclpy.init(args=args)
+    slm_sim = SLM_Sim()
+    rclpy.spin(slm_sim)
+    slm_sim.destroy_node()
+    rclpy.shutdown
+    
+if __name__ == '__main__':
+    main()
