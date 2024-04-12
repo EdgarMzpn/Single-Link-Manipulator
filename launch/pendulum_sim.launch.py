@@ -15,13 +15,6 @@ def generate_launch_description():
         parameters=[robot_description_config]
     )
 
-    # Uncomment for TESTING ONLY (COMMENT YOUR JOINT STATE PUBLISHER)
-    # joint_state_publisher_gui_node = Node(
-    #     package='joint_state_publisher_gui',
-    #     executable='joint_state_publisher_gui',
-    #     name='joint_state_publisher_gui'
-    # )
-
     rviz_config = os.path.join(get_package_share_directory('slm_sim'), 'rviz', 'manipulator.rviz')
     rviz_node = Node(
         package='rviz2',
@@ -33,7 +26,5 @@ def generate_launch_description():
 
     return LaunchDescription([
         slm_state_pub_node,
-        # Uncomment for TESTING ONLY (COMMENT YOUR JOINT STATE PUBLISHER)
-        # joint_state_publisher_gui_node,
         rviz_node
     ])
