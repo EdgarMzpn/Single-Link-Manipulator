@@ -8,7 +8,38 @@ from std_msgs.msg import Float32, Header
 from sensor_msgs.msg import JointState
 
 class SLM_Sim(Node):
+    """Class representing the SLM (Single Link Manipulator) Simulation Node
+
+    Attributes
+    ----------
+    k : float
+        Spring constant of the pendulum.
+    m : float
+        Mass of the pendulum.
+    l : float
+        Length of the pendulum.
+    a : float
+        Half the length of the pendulum.
+    g : float
+        Acceleration due to gravity.
+    J : float
+        Moment of inertia of the pendulum.
+    Tau : float
+        Torque applied to the pendulum.
+    x1 : float
+        Current position of the pendulum.
+    x2 : float
+        Current velocity of the pendulum.
+    dt : float
+        Time step of the simulation.
+    position : sensor_msgs.msg.JointState
+        Joint state message for publishing.
+    header : std_msgs.msg.Header
+        Header message for joint state.
+    """
     def __init__(self):
+        """Variable initialization
+        """
         super().__init__('SLM_Sim')
 
         # Setup Variables to be used
@@ -32,15 +63,21 @@ class SLM_Sim(Node):
         self.arm_pub = self.create_publisher(JointState, 'joint_states', 10)
         self.tau_pub = self.create_publisher(Float32, "tau", 10)
         self.get_logger().info("The SLM_Sim code is running")
-        time_period = 0.1 #seconds
         # Start time
-        self.start_time = self.get_clock().now()
+        time_period = 0.1 #seconds
         self.timer = self.create_timer(time_period, self.sim)
+        self.start_time = self.get_clock().now()
         
     # Define the callback functions
     def callbackTau(self, msg):
+        """Callback function for receiving torque messages
+
+        Parameters
+        ----------
+        msg : std_msgs.msg.Float32
+            Tau message
+        """
         self.Tau = msg.data
-        print("I'm being called")
 
     # Wrap to pi function
     def wrap_to_Pi(self, theta):
@@ -51,6 +88,12 @@ class SLM_Sim(Node):
     
     # Run pendulum simulation
     def sim(self):
+        """Run the pendulum simulation.
+
+        This method simulates the dynamics of the single-link manipulator (pendulum)
+        based on its governing equations. It updates the position and velocity of
+        the pendulum and publishes the joint state.
+        """
         # Get the current time
         current_time = self.get_clock().now()
         
@@ -78,8 +121,8 @@ class SLM_Sim(Node):
         if self.Tau > 0:
             self.tau_pub.publish(Float32(data = 0.0))
 
-        self.start_time = self.get_clock().now()
-        time.sleep(0.1)
+        self.start_time = current_time
+        # time.sleep(0.1)
 
 
 # Initialize the Node
